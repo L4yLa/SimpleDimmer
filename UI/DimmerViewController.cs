@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.GameplaySetup;
 using SimpleDimmer.Configuration;
-using UnityEngine;
 using Zenject;
 
 namespace SimpleDimmer.UI
@@ -14,13 +13,26 @@ namespace SimpleDimmer.UI
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        private bool _enabled;
+        private float _brightness;
+        private int _stepIndex;
+
         public void Initialize()
         {
+            _enabled = PluginConfig.Instance.Enabled;
+            _brightness = PluginConfig.Instance.Brightness;
+            _stepIndex = PluginConfig.Instance.StepIndex;
+            PluginConfig.Instance.RuntimeEnabled = _enabled;
+            PluginConfig.Instance.RuntimeBrightness = _brightness;
+            PluginConfig.Instance.RuntimeStepIndex = _stepIndex;
             GameplaySetup.Instance.AddTab("Simple Dimmer", "SimpleDimmer.UI.Views.DimmerView.bsml", this);
         }
 
         public void Dispose()
         {
+            PluginConfig.Instance.Enabled = _enabled;
+            PluginConfig.Instance.Brightness = _brightness;
+            PluginConfig.Instance.StepIndex = _stepIndex;
             GameplaySetup.Instance.RemoveTab("Simple Dimmer");
         }
 
@@ -32,10 +44,11 @@ namespace SimpleDimmer.UI
         [UIValue("enabled")]
         public bool Enabled
         {
-            get => PluginConfig.Instance.Enabled;
+            get => _enabled;
             set
             {
-                PluginConfig.Instance.Enabled = value;
+                _enabled = value;
+                PluginConfig.Instance.RuntimeEnabled = value;
                 NotifyPropertyChanged();
             }
         }
@@ -43,56 +56,29 @@ namespace SimpleDimmer.UI
         [UIValue("brightness")]
         public float Brightness
         {
-            get => PluginConfig.Instance.Brightness;
+            get => _brightness;
             set
             {
-                PluginConfig.Instance.Brightness = value;
+                _brightness = value;
+                PluginConfig.Instance.RuntimeBrightness = value;
                 NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(BrightnessText));
             }
         }
 
-        [UIValue("brightness-text")]
-        public string BrightnessText => PluginConfig.Instance.Brightness.ToString("0.00");
-
-        private static readonly List<string> _stepOptions = new List<string> { "0.1", "0.05", "0.01" };
+        private static readonly List<object> _stepOptions = new List<object> { "0.1", "0.05", "0.01" };
 
         [UIValue("step-options")]
-        public List<string> StepOptions => _stepOptions;
+        public List<object> StepOptions => _stepOptions;
 
         [UIValue("step-index")]
-        public string StepIndex
+        public int StepIndex
         {
-            get => PluginConfig.Instance.StepIndex.ToString();
+            get => _stepIndex;
             set
             {
-                if (int.TryParse(value, out int parsed))
-                {
-                    PluginConfig.Instance.StepIndex = parsed;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-
-        [UIAction("brightness-inc")]
-        private void BrightnessIncrease()
-        {
-            Brightness = Mathf.Clamp(Brightness + GetStep(), 0f, 1f);
-        }
-
-        [UIAction("brightness-dec")]
-        private void BrightnessDecrease()
-        {
-            Brightness = Mathf.Clamp(Brightness - GetStep(), 0f, 1f);
-        }
-
-        private float GetStep()
-        {
-            switch (PluginConfig.Instance.StepIndex)
-            {
-                case 1: return 0.05f;
-                case 2: return 0.01f;
-                default: return 0.1f;
+                _stepIndex = value;
+                PluginConfig.Instance.RuntimeStepIndex = value;
+                NotifyPropertyChanged();
             }
         }
     }

@@ -9,9 +9,9 @@ namespace SimpleDimmer.Patches
     {
         private static void ApplyDimming(ref Color color)
         {
-            if (!PluginConfig.Instance.Enabled) return;
+            if (!PluginConfig.Instance.RuntimeEnabled) return;
 
-            float intensity = PluginConfig.Instance.Brightness;
+            float intensity = PluginConfig.Instance.RuntimeBrightness;
             if (intensity >= 1f) return;
 
             float alpha = color.a;
