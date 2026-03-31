@@ -13,8 +13,8 @@ namespace SimpleDimmer
     [Plugin(RuntimeOptions.DynamicInit)]
     public class Plugin
     {
-        internal static IPALogger Log { get; private set; }
-        private Harmony _harmony;
+        internal static IPALogger Log { get; private set; } = null!;
+        private Harmony? _harmony;
 
         [Init]
         public Plugin(IPALogger logger, Config conf, Zenjector zenjector)

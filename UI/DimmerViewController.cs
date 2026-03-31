@@ -12,7 +12,7 @@ namespace SimpleDimmer.UI
 {
     internal class DimmerViewController : IInitializable, IDisposable, INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public void Initialize()
         {

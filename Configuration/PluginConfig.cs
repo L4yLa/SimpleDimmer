@@ -6,7 +6,7 @@ namespace SimpleDimmer.Configuration
 {
     public class PluginConfig
     {
-        public static PluginConfig Instance { get; set; }
+        public static PluginConfig Instance { get; set; } = null!;
         public virtual bool Enabled { get; set; } = false;
         public virtual float Brightness { get; set; } = 1.0f;
         // Step index: 0=0.1, 1=0.05, 2=0.01
