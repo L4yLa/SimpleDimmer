@@ -15,21 +15,18 @@ namespace SimpleDimmer
     {
         internal static IPALogger Log { get; private set; }
         private Harmony _harmony;
-        private Zenjector _zenjector;
 
         [Init]
         public Plugin(IPALogger logger, Config conf, Zenjector zenjector)
         {
             Log = logger;
             PluginConfig.Instance = conf.Generated<PluginConfig>();
-            _zenjector = zenjector;
+            zenjector.Install<MenuInstaller>(Location.Menu);
         }
 
         [OnEnable]
         public void OnEnable()
         {
-            _zenjector.UseMainMenu<MenuInstaller>();
-
             _harmony = new Harmony("com.l4yla.beatsaber.simpledimmer");
             _harmony.PatchAll(typeof(LightDimmerPatch).Assembly);
         }

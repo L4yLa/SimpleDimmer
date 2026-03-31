@@ -84,14 +84,5 @@ namespace SimpleDimmer.Patches
         [HarmonyPatch(typeof(LightWithIds.LightWithId), nameof(LightWithIds.LightWithId.ColorWasSet))]
         private static void LightWithIds_LightWithId_ColorWasSet(ref Color color) =>
             ApplyDimming(ref color);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(LightmapLightWithIds), nameof(LightmapLightWithIds.SetDataToShaders))]
-        private static void LightmapLightWithIds_SetDataToShaders(ref Color lightmapColor, ref Color probeColor)
-        {
-            ApplyDimming(ref lightmapColor);
-            ApplyDimming(ref probeColor);
-        }
     }
 }
