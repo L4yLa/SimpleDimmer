@@ -105,22 +105,48 @@ namespace SimpleDimmer.Patches
         private static void LightWithIds_LightWithId_ColorWasSet(ref Color __0) =>
             ApplyDimming(ref __0);
 
+        // StretchableObstacle: SetAllProperties(float width, float height, float length, Color color, float manualUvOffset)
         [HarmonyPrefix]
         [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(StretchableObstacle), nameof(StretchableObstacle.SetSizeAndColor))]
-        private static void StretchableObstacle_SetSizeAndColor(float width, float height, float length, ref Color color) =>
+        [HarmonyPatch(typeof(StretchableObstacle), nameof(StretchableObstacle.SetAllProperties))]
+        private static void StretchableObstacle_SetAllProperties(
+            float width, float height, float length, ref Color color, float manualUvOffset) =>
             ApplyDimmingWall(ref color);
 
+        // ParametricBoxFakeGlowController: Refresh() reads public Color color field
         [HarmonyPrefix]
         [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.SetSizeAndColor))]
-        private static void ParametricBoxFakeGlowController_SetSizeAndColor(float width, float length, float offset, ref Color color) =>
-            ApplyDimmingWall(ref color);
+        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.Refresh))]
+        private static void ParametricBoxFakeGlowController_Refresh_Pre(
+            ParametricBoxFakeGlowController __instance, out Color __state)
+        {
+            __state = __instance.color;
+            ApplyDimmingWall(ref __instance.color);
+        }
 
+        [HarmonyPostfix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.Refresh))]
+        private static void ParametricBoxFakeGlowController_Refresh_Post(
+            ParametricBoxFakeGlowController __instance, Color __state)
+            => __instance.color = __state;
+
+        // ParametricBoxController: Refresh() reads public Color color field
         [HarmonyPrefix]
         [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.SetSizeAndColor))]
-        private static void ParametricBoxController_SetSizeAndColor(float width, float height, float length, ref Color color) =>
-            ApplyDimmingWall(ref color);
+        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.Refresh))]
+        private static void ParametricBoxController_Refresh_Pre(
+            ParametricBoxController __instance, out Color __state)
+        {
+            __state = __instance.color;
+            ApplyDimmingWall(ref __instance.color);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.Refresh))]
+        private static void ParametricBoxController_Refresh_Post(
+            ParametricBoxController __instance, Color __state)
+            => __instance.color = __state;
     }
 }
