@@ -74,23 +74,7 @@
   </ItemGroup>
 
   <Target Name="CreateReleasePackage" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;
-      $manifest = Get-Content '$(MSBuildProjectDirectory)\manifest.json' | ConvertFrom-Json;
-      $version = $manifest.version;
-      $gameVersion = $manifest.gameVersion;
-      $releaseDir = '$(MSBuildProjectDirectory)\Release';
-      $pluginsDir = &quot;&quot;$releaseDir\Plugins&quot;&quot;;
-      $archiveName = &quot;&quot;SimpleDimmer_v$version`_bs$gameVersion.7z&quot;&quot;;
-      $archivePath = &quot;&quot;$releaseDir\$archiveName&quot;&quot;;
-      New-Item -ItemType Directory -Force -Path $pluginsDir | Out-Null;
-      Copy-Item '$(OutputPath)SimpleDimmer.dll' $pluginsDir -Force;
-      if (Test-Path $archivePath) { Remove-Item $archivePath -Force };
-      $sevenZip = '7z';
-      try { &amp; $sevenZip i 2&gt;&amp;1 | Out-Null } catch { $sevenZip = 'C:\Program Files\7-Zip\7z.exe' };
-      &amp; $sevenZip a -t7z -m0=lzma2 -mx=9 $archivePath &quot;&quot;$pluginsDir\..&quot;&quot; -xr!'*.gitkeep';
-      Remove-Item $pluginsDir -Recurse -Force;
-      Write-Host &quot;&quot;Package created: $archivePath&quot;&quot;;
-    &quot;" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\CreateReleasePackage.ps1&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(OutputPath)&quot;" />
   </Target>
 
 </Project>
