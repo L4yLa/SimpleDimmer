@@ -17,7 +17,7 @@ namespace SimpleDimmer.Patches
             float alpha = color.a;
             Color.RGBToHSV(color, out float h, out float s, out float v);
             v *= intensity;
-            color = Color.HSVToRGB(h, s, v);
+            color = Color.HSVToRGB(h, s, v, hdr: true);
             color.a = alpha;
         }
 
