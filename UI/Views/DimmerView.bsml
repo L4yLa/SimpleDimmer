@@ -1,14 +1,14 @@
 <bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xsi:noNamespaceSchemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
-  <vertical-layout pad="2" spacing="1">
+  <vertical pad="2" spacing="1">
     <toggle-setting text="Enable" value="enabled" apply-on-change="true" />
-    <horizontal-layout spacing="1" child-align="MiddleCenter">
+    <horizontal spacing="1" child-align="MiddleCenter">
       <text text="Brightness" font-size="4" />
       <button text="&lt;" on-click="brightness-dec" preferred-width="8" />
       <slider-setting value="brightness" min="0" max="1" increment="0.01"
                       apply-on-change="true" show-buttons="false" preferred-width="40" />
       <button text="&gt;" on-click="brightness-inc" preferred-width="8" />
-    </horizontal-layout>
+    </horizontal>
     <list-setting text="Step" value="step-index" options="step-options" apply-on-change="true" />
-  </vertical-layout>
+  </vertical>
 </bg>
