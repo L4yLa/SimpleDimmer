@@ -22,6 +22,7 @@ namespace SimpleDimmer
             Log = logger;
             PluginConfig.Instance = conf.Generated<PluginConfig>();
             zenjector.Install<MenuInstaller>(Location.Menu);
+            zenjector.Install<GameCoreInstaller>(Location.GameCore);
         }
 
         [OnEnable]

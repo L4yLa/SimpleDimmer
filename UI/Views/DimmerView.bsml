@@ -2,6 +2,8 @@
     xsi:noNamespaceSchemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
   <vertical pad="2" spacing="1">
     <toggle-setting text="Enable" value="enabled" apply-on-change="true" />
+    <toggle-setting text="Dimming Lights" value="dimming-lights" apply-on-change="true" />
+    <toggle-setting text="Dimming Walls" value="dimming-walls" apply-on-change="true" />
     <slider-setting text="Brightness" value="brightness" min="0" max="1" increment="0.01"
                     apply-on-change="true" show-buttons="true" />
   </vertical>

@@ -10,6 +10,24 @@ namespace SimpleDimmer.Patches
         private static void ApplyDimming(ref Color color)
         {
             if (!PluginConfig.Instance.RuntimeEnabled) return;
+            if (!PluginConfig.Instance.RuntimeIsGameScene) return;
+            if (!PluginConfig.Instance.RuntimeDimmingLights) return;
+
+            float intensity = PluginConfig.Instance.RuntimeBrightness;
+            if (intensity >= 1f) return;
+
+            float alpha = color.a;
+            Color.RGBToHSV(color, out float h, out float s, out float v);
+            v *= intensity;
+            color = Color.HSVToRGB(h, s, v, hdr: true);
+            color.a = alpha;
+        }
+
+        private static void ApplyDimmingWall(ref Color color)
+        {
+            if (!PluginConfig.Instance.RuntimeEnabled) return;
+            if (!PluginConfig.Instance.RuntimeIsGameScene) return;
+            if (!PluginConfig.Instance.RuntimeDimmingWalls) return;
 
             float intensity = PluginConfig.Instance.RuntimeBrightness;
             if (intensity >= 1f) return;
@@ -86,5 +104,23 @@ namespace SimpleDimmer.Patches
         [HarmonyPatch(typeof(LightWithIds.LightWithId), nameof(LightWithIds.LightWithId.ColorWasSet))]
         private static void LightWithIds_LightWithId_ColorWasSet(ref Color __0) =>
             ApplyDimming(ref __0);
+
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(StretchableObstacle), nameof(StretchableObstacle.SetSizeAndColor))]
+        private static void StretchableObstacle_SetSizeAndColor(float width, float height, float length, ref Color color) =>
+            ApplyDimmingWall(ref color);
+
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.SetSizeAndColor))]
+        private static void ParametricBoxFakeGlowController_SetSizeAndColor(float width, float length, float offset, ref Color color) =>
+            ApplyDimmingWall(ref color);
+
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.SetSizeAndColor))]
+        private static void ParametricBoxController_SetSizeAndColor(float width, float height, float length, ref Color color) =>
+            ApplyDimmingWall(ref color);
     }
 }
