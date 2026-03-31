@@ -7,9 +7,56 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <BeatSaberDir Condition="'$(BeatSaberDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Beat Saber</BeatSaberDir>
+
+    <ManifestFile>manifest.json</ManifestFile>
+    <GeneratedAssemblyInfoFile>GeneratedAssemblyInfo.cs</GeneratedAssemblyInfoFile>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <!-- Debug ビルド設定 -->
+  <Target Name="GenerateVersionAssemblyInfo" BeforeTargets="BeforeCompile">
+    <Message Importance="High" Text="SimpleDimmer: reading version from $(ManifestFile)" />
+
+    <ReadLinesFromFile File="$(ManifestFile)">
+      <Output TaskParameter="Lines" ItemName="ManifestLines" />
+    </ReadLinesFromFile>
+
+    <PropertyGroup>
+      <_ManifestContent>@(ManifestLines,' ')</_ManifestContent>
+      <_ManifestVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_ManifestContent)', '\"version\"\s*:\s*\"([^\"]+)\"').Groups[1].Value)</_ManifestVersion>
+      <Version>$(_ManifestVersion)</Version>
+      <InformationalVersion>$(_ManifestVersion)</InformationalVersion>
+      <AssemblyVersion>$(_ManifestVersion).0</AssemblyVersion>
+      <FileVersion>$(_ManifestVersion).0</FileVersion>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="SimpleDimmer: parsed manifest version = $(_ManifestVersion)" />
+    <Message Importance="High" Text="SimpleDimmer: AssemblyVersion=$(AssemblyVersion) FileVersion=$(FileVersion)" />
+
+    <WriteLinesToFile
+      File="$(GeneratedAssemblyInfoFile)"
+      Overwrite="true"
+      Lines="using System.Reflection%3b" />
+
+    <WriteLinesToFile
+      File="$(GeneratedAssemblyInfoFile)"
+      Overwrite="false"
+      Lines="[assembly: AssemblyVersion(&quot;$(AssemblyVersion)&quot;)]" />
+
+    <WriteLinesToFile
+      File="$(GeneratedAssemblyInfoFile)"
+      Overwrite="false"
+      Lines="[assembly: AssemblyFileVersion(&quot;$(FileVersion)&quot;)]" />
+
+    <WriteLinesToFile
+      File="$(GeneratedAssemblyInfoFile)"
+      Overwrite="false"
+      Lines="[assembly: AssemblyInformationalVersion(&quot;$(InformationalVersion)&quot;)]" />
+
+    <ItemGroup>
+      <Compile Include="$(GeneratedAssemblyInfoFile)" />
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <Optimize>false</Optimize>
     <DebugType>full</DebugType>
@@ -17,7 +64,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
-  <!-- Release ビルド設定 -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>

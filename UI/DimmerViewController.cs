@@ -55,19 +55,22 @@ namespace SimpleDimmer.UI
         [UIValue("brightness-text")]
         public string BrightnessText => PluginConfig.Instance.Brightness.ToString("0.00");
 
-        private static readonly List<object> _stepOptions = new List<object> { "0.1", "0.05", "0.01" };
+        private static readonly List<string> _stepOptions = new List<string> { "0.1", "0.05", "0.01" };
 
         [UIValue("step-options")]
-        public List<object> StepOptions => _stepOptions;
+        public List<string> StepOptions => _stepOptions;
 
         [UIValue("step-index")]
-        public int StepIndex
+        public string StepIndex
         {
-            get => PluginConfig.Instance.StepIndex;
+            get => PluginConfig.Instance.StepIndex.ToString();
             set
             {
-                PluginConfig.Instance.StepIndex = value;
-                NotifyPropertyChanged();
+                if (int.TryParse(value, out int parsed))
+                {
+                    PluginConfig.Instance.StepIndex = parsed;
+                    NotifyPropertyChanged();
+                }
             }
         }
 
