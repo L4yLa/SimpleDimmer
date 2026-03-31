@@ -148,5 +148,23 @@ namespace SimpleDimmer.Patches
         private static void ParametricBoxController_Refresh_Post(
             ParametricBoxController __instance, Color __state)
             => __instance.color = __state;
+
+        // Parametric3SliceSpriteController: Refresh() reads public Color color field
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(Parametric3SliceSpriteController), nameof(Parametric3SliceSpriteController.Refresh))]
+        private static void Parametric3SliceSpriteController_Refresh_Pre(
+            Parametric3SliceSpriteController __instance, out Color __state)
+        {
+            __state = __instance.color;
+            ApplyDimming(ref __instance.color);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPatch(typeof(Parametric3SliceSpriteController), nameof(Parametric3SliceSpriteController.Refresh))]
+        private static void Parametric3SliceSpriteController_Refresh_Post(
+            Parametric3SliceSpriteController __instance, Color __state)
+            => __instance.color = __state;
     }
 }
