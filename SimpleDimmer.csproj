@@ -73,8 +73,4 @@
     <EmbeddedResource Include="UI\Views\DimmerView.bsml" />
   </ItemGroup>
 
-  <Target Name="CreateReleasePackage" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\build\CreateReleasePackage.ps1&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot; -OutputPath &quot;$(OutputPath)&quot;" />
-  </Target>
-
 </Project>
