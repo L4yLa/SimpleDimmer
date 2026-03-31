@@ -1,9 +1,8 @@
-<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-    xsi:noNamespaceSchemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
-  <vertical pad="2" spacing="1">
-    <toggle-setting text="Enable" value="enabled" apply-on-change="true" />
-    <slider-setting text="Brightness" value="brightness" min="0" max="1" increment="0.01"
-                    apply-on-change="true" show-buttons="true" />
-    <list-setting text="Step" value="step-index" options="step-options" apply-on-change="true" />
-  </vertical>
-</bg>
+&lt;bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xsi:noNamespaceSchemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'&gt;
+  &lt;vertical pad="2" spacing="1"&gt;
+    &lt;toggle-setting text="Enable" value="enabled" apply-on-change="true" /&gt;
+    &lt;slider-setting text="Brightness" value="brightness" min="0" max="1" increment="0.01"
+                    apply-on-change="true" show-buttons="true" /&gt;
+  &lt;/vertical&gt;
+&lt;/bg&gt;
