@@ -11,7 +11,16 @@
     <ManifestFile>manifest.json</ManifestFile>
     <GeneratedAssemblyInfoFile>GeneratedAssemblyInfo.cs</GeneratedAssemblyInfoFile>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- ゲームの Plugins フォルダと同じ構成で出力する（bin\<構成>\Plugins\） -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\$(Configuration)\Plugins\</OutputPath>
   </PropertyGroup>
+
+  <!-- 生成ファイルは下のターゲットで追加するため、既定の *.cs 収集からは外す（CS2002 の重複指定を防ぐ） -->
+  <ItemGroup>
+    <Compile Remove="$(GeneratedAssemblyInfoFile)" />
+  </ItemGroup>
 
   <Target Name="GenerateVersionAssemblyInfo" BeforeTargets="BeforeCompile">
     <Message Importance="High" Text="SimpleDimmer: reading version from $(ManifestFile)" />
@@ -55,6 +64,19 @@
     <ItemGroup>
       <Compile Include="$(GeneratedAssemblyInfoFile)" />
     </ItemGroup>
+  </Target>
+
+  <!-- 参照先のゲームフォルダが 1.44.1 か確認する（BeatSaberVersion.txt 例: 1.44.1_20239） -->
+  <Target Name="ValidateGameVersion" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <_GameVersionFile>$(BeatSaberDir)\BeatSaberVersion.txt</_GameVersionFile>
+      <_GameVersionRaw Condition="Exists('$(_GameVersionFile)')">$([System.IO.File]::ReadAllText('$(_GameVersionFile)').Trim())</_GameVersionRaw>
+      <_GameVersion Condition="'$(_GameVersionRaw)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(_GameVersionRaw)', '_.*$', ''))</_GameVersion>
+    </PropertyGroup>
+    <Error Condition="'$(_GameVersion)' != '' AND '$(_GameVersion)' != '1.44.1'"
+           Text="BeatSaberDir '$(BeatSaberDir)' is game version $(_GameVersion). SimpleDimmer targets 1.44.1." />
+    <Warning Condition="'$(_GameVersion)' == ''"
+             Text="BeatSaberVersion.txt was not found in BeatSaberDir '$(BeatSaberDir)'; the game version could not be verified." />
   </Target>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

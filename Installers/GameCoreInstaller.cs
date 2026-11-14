@@ -1,4 +1,6 @@
+using System;
 using SimpleDimmer.Configuration;
+using SimpleDimmer.Patches;
 using Zenject;
 
 namespace SimpleDimmer.Installers
@@ -7,20 +9,19 @@ namespace SimpleDimmer.Installers
     {
         public override void InstallBindings()
         {
-            Container.BindInterfacesAndSelfTo<GameSceneActivator>().AsSingle().NonLazy();
+            // ライトの初期色が設定される前に有効にするため、バインド時点で切り替える
+            DimmerState.IsGameScene = true;
+            Container.BindInterfacesTo<GameSceneDeactivator>().AsSingle().NonLazy();
         }
     }
 
-    internal class GameSceneActivator : IInitializable, System.IDisposable
+    internal class GameSceneDeactivator : IDisposable
     {
-        public void Initialize()
-        {
-            PluginConfig.Instance.RuntimeIsGameScene = true;
-        }
-
         public void Dispose()
         {
-            PluginConfig.Instance.RuntimeIsGameScene = false;
+            DimmerState.IsGameScene = false;
+            TubeRegistry.RestoreAndClear();
+            WallFramePatch.Clear();
         }
     }
 }

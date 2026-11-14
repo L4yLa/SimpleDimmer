@@ -1,10 +1,11 @@
 <bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xsi:noNamespaceSchemaLocation='https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
-  <vertical pad="2" spacing="1">
+  <vertical pad="2" spacing="1" child-expand-height="false" child-align="UpperCenter">
     <toggle-setting text="Enable" value="enabled" apply-on-change="true" />
     <toggle-setting text="Dimming Lights" value="dimming-lights" apply-on-change="true" />
     <toggle-setting text="Dimming Walls" value="dimming-walls" apply-on-change="true" />
-    <slider-setting text="Brightness" value="brightness" min="0" max="1" increment="0.01"
+    <slider-setting text="Brightness" value="brightness" min="0" max="100" increment="1"
+                    integer-only="true" formatter="format-percent"
                     apply-on-change="true" show-buttons="true" />
   </vertical>
 </bg>

@@ -13,27 +13,27 @@ namespace SimpleDimmer.UI
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private bool _enabled;
-        private float _brightness;
+        private int _brightness;
         private bool _dimmingLights;
         private bool _dimmingWalls;
 
         public void Initialize()
         {
             _enabled = PluginConfig.Instance.Enabled;
-            _brightness = PluginConfig.Instance.Brightness;
+            _brightness = PluginConfig.Instance.PerceivedBrightness;
             _dimmingLights = PluginConfig.Instance.DimmingLights;
             _dimmingWalls = PluginConfig.Instance.DimmingWalls;
-            PluginConfig.Instance.RuntimeEnabled = _enabled;
-            PluginConfig.Instance.RuntimeBrightness = _brightness;
-            PluginConfig.Instance.RuntimeDimmingLights = _dimmingLights;
-            PluginConfig.Instance.RuntimeDimmingWalls = _dimmingWalls;
+            DimmerState.Enabled = _enabled;
+            DimmerState.SetPerceivedBrightness(_brightness);
+            DimmerState.DimmingLights = _dimmingLights;
+            DimmerState.DimmingWalls = _dimmingWalls;
             GameplaySetup.Instance.AddTab("Simple Dimmer", "SimpleDimmer.UI.Views.DimmerView.bsml", this);
         }
 
         public void Dispose()
         {
             PluginConfig.Instance.Enabled = _enabled;
-            PluginConfig.Instance.Brightness = _brightness;
+            PluginConfig.Instance.PerceivedBrightness = _brightness;
             PluginConfig.Instance.DimmingLights = _dimmingLights;
             PluginConfig.Instance.DimmingWalls = _dimmingWalls;
             GameplaySetup.Instance.RemoveTab("Simple Dimmer");
@@ -51,19 +51,19 @@ namespace SimpleDimmer.UI
             set
             {
                 _enabled = value;
-                PluginConfig.Instance.RuntimeEnabled = value;
+                DimmerState.Enabled = value;
                 NotifyPropertyChanged();
             }
         }
 
         [UIValue("brightness")]
-        public float Brightness
+        public int Brightness
         {
             get => _brightness;
             set
             {
                 _brightness = value;
-                PluginConfig.Instance.RuntimeBrightness = value;
+                DimmerState.SetPerceivedBrightness(value);
                 NotifyPropertyChanged();
             }
         }
@@ -75,7 +75,7 @@ namespace SimpleDimmer.UI
             set
             {
                 _dimmingLights = value;
-                PluginConfig.Instance.RuntimeDimmingLights = value;
+                DimmerState.DimmingLights = value;
                 NotifyPropertyChanged();
             }
         }
@@ -87,9 +87,12 @@ namespace SimpleDimmer.UI
             set
             {
                 _dimmingWalls = value;
-                PluginConfig.Instance.RuntimeDimmingWalls = value;
+                DimmerState.DimmingWalls = value;
                 NotifyPropertyChanged();
             }
         }
+
+        [UIAction("format-percent")]
+        public string FormatPercent(int value) => $"{value}%";
     }
 }

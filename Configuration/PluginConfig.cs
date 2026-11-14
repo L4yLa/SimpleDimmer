@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using IPA.Config.Stores;
 
@@ -9,19 +8,12 @@ namespace SimpleDimmer.Configuration
     {
         public static PluginConfig Instance { get; set; } = null!;
 
-        // IPA による自動ロード・保存用（virtual）
         public virtual bool Enabled { get; set; } = false;
-        public virtual float Brightness { get; set; } = 1.0f;
 
-        // IPA による自動ロード・保存用（virtual）
+        // 体感の明るさ（%）。実際の倍率は BrightnessCurve で求める
+        public virtual int PerceivedBrightness { get; set; } = 100;
+
         public virtual bool DimmingLights { get; set; } = true;
         public virtual bool DimmingWalls { get; set; } = true;
-
-        // 実行時キャッシュ（非virtual、UI/Patch から参照）
-        public bool RuntimeEnabled;
-        public float RuntimeBrightness;
-        [NonSerialized] public bool RuntimeDimmingLights = true;
-        [NonSerialized] public bool RuntimeDimmingWalls = true;
-        [NonSerialized] public bool RuntimeIsGameScene = false;
     }
 }

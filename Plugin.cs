@@ -29,7 +29,8 @@ namespace SimpleDimmer
         public void OnEnable()
         {
             _harmony = new Harmony("com.l4yla.beatsaber.simpledimmer");
-            _harmony.PatchAll(typeof(LightDimmerPatch).Assembly);
+            _harmony.PatchAll(typeof(Plugin).Assembly);
+            OptionalPatches.Apply(_harmony);
         }
 
         [OnDisable]

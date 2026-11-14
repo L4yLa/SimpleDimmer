@@ -1,152 +1,189 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using SimpleDimmer.Configuration;
 using UnityEngine;
 
 namespace SimpleDimmer.Patches
 {
+    // ライトは種類ごとに色の RGB とアルファの使い方が違うため、実際に明るさへ効く側に倍率を掛ける。
+    // Chroma はライトごとに ColorWasSet を直接呼ぶので、標準・Chroma のどちらの経路もここを通る。
+    // チューブ型ライトは TubeLightPatches.cs で扱う。
+
+    // 画面のアルファを書かないライト（Unity のライト・背景色）。RGB だけを下げる
     [HarmonyPatch]
-    internal static class LightDimmerPatch
+    internal static class RgbLightPatch
     {
-        private static void ApplyDimming(ref Color color)
+        private static IEnumerable<MethodBase> TargetMethods()
         {
-            if (!PluginConfig.Instance.RuntimeEnabled) return;
-            if (!PluginConfig.Instance.RuntimeIsGameScene) return;
-            if (!PluginConfig.Instance.RuntimeDimmingLights) return;
-
-            float intensity = PluginConfig.Instance.RuntimeBrightness;
-            if (intensity >= 1f) return;
-
-            float alpha = color.a;
-            Color.RGBToHSV(color, out float h, out float s, out float v);
-            v *= intensity;
-            color = Color.HSVToRGB(h, s, v, hdr: true);
-            color.a = alpha;
+            Type[] types =
+            {
+                typeof(BloomPrePassBackgroundColorsGradientTintColorWithLightIds),
+                typeof(BloomPrePassBackgroundColorsGradientElementWithLightId),
+                typeof(BloomPrePassBackgroundLightWithId),
+                typeof(BloomPrePassBackgroundColorsGradientTintColorWithLightId),
+                typeof(DirectionalLightWithId),
+                typeof(UnityLightWithId),
+                typeof(PointLightWithIds),
+                typeof(DirectionalLightWithLightGroupIds),
+            };
+            foreach (Type type in types)
+            {
+                yield return AccessTools.DeclaredMethod(type, "ColorWasSet", new[] { typeof(Color) });
+            }
         }
 
-        private static void ApplyDimmingWall(ref Color color)
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0)
         {
-            if (!PluginConfig.Instance.RuntimeEnabled) return;
-            if (!PluginConfig.Instance.RuntimeIsGameScene) return;
-            if (!PluginConfig.Instance.RuntimeDimmingWalls) return;
+            if (!DimmerState.LightsActive) return;
+            ColorDimming.ScaleRgb(ref __0, DimmerState.Multiplier);
+        }
+    }
 
-            float intensity = PluginConfig.Instance.RuntimeBrightness;
-            if (intensity >= 1f) return;
-
-            float alpha = color.a;
-            Color.RGBToHSV(color, out float h, out float s, out float v);
-            v *= intensity;
-            color = Color.HSVToRGB(h, s, v, hdr: true);
-            color.a = alpha;
+    // 描画色のアルファが画面のアルファになり、後処理で白ブーストが付くライト（A 方式）。
+    // RGB を下げるだけでは白が残るので、アルファも上限 1 で切ってから下げる
+    [HarmonyPatch]
+    internal static class AlphaLightPatch
+    {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            Type[] types =
+            {
+                typeof(InstancedMaterialLightWithId),
+                typeof(ParticleSystemLightWithId),
+                typeof(RectangleFakeGlowLightWithId),
+                typeof(ColorArrayLightWithIds.ColorArrayLightWithId),
+                typeof(MixedLightsColorSetterRuntimeLightWithIds),
+                typeof(ParticleSystemLightWithIds),
+            };
+            foreach (Type type in types)
+            {
+                yield return AccessTools.DeclaredMethod(type, "ColorWasSet", new[] { typeof(Color) });
+            }
         }
 
-        [HarmonyPrefix]
         [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(BloomPrePassBackgroundColorsGradientTintColorWithLightIds), nameof(BloomPrePassBackgroundColorsGradientTintColorWithLightIds.ColorWasSet))]
-        private static void BloomPrePassBackgroundColorsGradientTintColorWithLightIds_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(BloomPrePassBackgroundColorsGradientElementWithLightId), nameof(BloomPrePassBackgroundColorsGradientElementWithLightId.ColorWasSet))]
-        private static void BloomPrePassBackgroundColorsGradientElementWithLightId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(BloomPrePassBackgroundLightWithId), nameof(BloomPrePassBackgroundLightWithId.ColorWasSet))]
-        private static void BloomPrePassBackgroundLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(DirectionalLightWithId), nameof(DirectionalLightWithId.ColorWasSet))]
-        private static void DirectionalLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(InstancedMaterialLightWithId), nameof(InstancedMaterialLightWithId.ColorWasSet))]
-        private static void InstancedMaterialLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(MaterialLightWithId), nameof(MaterialLightWithId.ColorWasSet))]
-        private static void MaterialLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParticleSystemLightWithId), nameof(ParticleSystemLightWithId.ColorWasSet))]
-        private static void ParticleSystemLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(SpriteLightWithId), nameof(SpriteLightWithId.ColorWasSet))]
-        private static void SpriteLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(TubeBloomPrePassLightWithId), nameof(TubeBloomPrePassLightWithId.ColorWasSet))]
-        private static void TubeBloomPrePassLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(UnityLightWithId), nameof(UnityLightWithId.ColorWasSet))]
-        private static void UnityLightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(LightWithIds.LightWithId), nameof(LightWithIds.LightWithId.ColorWasSet))]
-        private static void LightWithIds_LightWithId_ColorWasSet(ref Color __0) =>
-            ApplyDimming(ref __0);
-
-        // StretchableObstacle: SetAllProperties(float width, float height, float length, Color color, float manualUvOffset)
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(StretchableObstacle), nameof(StretchableObstacle.SetAllProperties))]
-        private static void StretchableObstacle_SetAllProperties(
-            float width, float height, float length, ref Color color, float manualUvOffset) =>
-            ApplyDimmingWall(ref color);
-
-        // ParametricBoxFakeGlowController: Refresh() reads public Color color field
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.Refresh))]
-        private static void ParametricBoxFakeGlowController_Refresh_Pre(
-            ParametricBoxFakeGlowController __instance, out Color __state)
+        private static void Prefix(ref Color __0)
         {
-            __state = __instance.color;
-            ApplyDimmingWall(ref __instance.color);
+            if (!DimmerState.LightsActive) return;
+            ColorDimming.ScaleRgbAndAlpha(ref __0, DimmerState.SqrtMultiplier);
+        }
+    }
+
+    // グループ型ライトの子。親が受け取った色をまとめて処理する。
+    // 親が RuntimeLightWithIds 系なら親の ColorWasSet 側で、ColorArrayLightWithId は自身の上書きメソッド側で処理する。
+    [HarmonyPatch(typeof(LightWithIds.LightWithId), "ColorWasSet")]
+    internal static class GroupedLightChildPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(LightWithIds.LightWithId __instance, ref Color __0, LightWithIds ____parentLightWithIds)
+        {
+            if (!DimmerState.LightsActive) return;
+            if (__instance is ColorArrayLightWithIds.ColorArrayLightWithId) return;
+            if (____parentLightWithIds is RuntimeLightWithIds || ____parentLightWithIds is RuntimeLightWithLightGroupIds) return;
+            ColorDimming.ScaleRgb(ref __0, DimmerState.Multiplier);
+        }
+    }
+
+    // アルファだけを使う設定があるマテリアル系ライト
+    [HarmonyPatch(typeof(MaterialLightWithId), "ColorWasSet")]
+    internal static class MaterialLightPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0, bool ____setAlphaOnly, bool ____alphaIntoColor)
+        {
+            if (!DimmerState.LightsActive) return;
+            if (____setAlphaOnly || ____alphaIntoColor)
+            {
+                __0.a *= DimmerState.Multiplier;
+            }
+            else
+            {
+                ColorDimming.ScaleRgbAndAlpha(ref __0, DimmerState.SqrtMultiplier);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(MaterialLightWithIds), "ColorWasSet")]
+    internal static class MaterialLightsPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0, bool ____setAlphaOnly, bool ____alphaIntoColor)
+        {
+            if (!DimmerState.LightsActive) return;
+            if (____setAlphaOnly || ____alphaIntoColor)
+            {
+                __0.a *= DimmerState.Multiplier;
+            }
+            else
+            {
+                ColorDimming.ScaleRgbAndAlpha(ref __0, DimmerState.SqrtMultiplier);
+            }
+        }
+    }
+
+    // 強度だけを使う設定では、アルファが明度になる
+    [HarmonyPatch(typeof(DirectionalLightWithIds), "ColorWasSet")]
+    internal static class DirectionalLightsPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0, bool ____setIntensityOnly)
+        {
+            if (!DimmerState.LightsActive) return;
+            if (____setIntensityOnly)
+            {
+                __0.a *= DimmerState.Multiplier;
+            }
+            else
+            {
+                ColorDimming.ScaleRgb(ref __0, DimmerState.Multiplier);
+            }
+        }
+    }
+
+    // アルファだけを使う設定ではアルファで表示・非表示も決まるため、判定の後で描画色のアルファを下げる
+    [HarmonyPatch(typeof(SpriteLightWithId), "ColorWasSet")]
+    internal static class SpriteLightPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0, bool ____setAlphaOnly)
+        {
+            if (!DimmerState.LightsActive || ____setAlphaOnly) return;
+            ColorDimming.ScaleRgb(ref __0, DimmerState.Multiplier);
         }
 
-        [HarmonyPostfix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxFakeGlowController), nameof(ParametricBoxFakeGlowController.Refresh))]
-        private static void ParametricBoxFakeGlowController_Refresh_Post(
-            ParametricBoxFakeGlowController __instance, Color __state)
-            => __instance.color = __state;
-
-        // ParametricBoxController: Refresh() reads public Color color field
-        [HarmonyPrefix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.Refresh))]
-        private static void ParametricBoxController_Refresh_Pre(
-            ParametricBoxController __instance, out Color __state)
+        private static void Postfix(bool ____setAlphaOnly, SpriteRenderer ____spriteRenderer)
         {
-            __state = __instance.color;
-            ApplyDimmingWall(ref __instance.color);
+            if (!DimmerState.LightsActive || !____setAlphaOnly || ____spriteRenderer == null) return;
+            Color color = ____spriteRenderer.color;
+            color.a *= DimmerState.Multiplier;
+            ____spriteRenderer.color = color;
+        }
+    }
+
+    [HarmonyPatch(typeof(SpriteArrayLightWithId), "ColorWasSet")]
+    internal static class SpriteArrayLightPatch
+    {
+        [HarmonyPriority(Priority.First)]
+        private static void Prefix(ref Color __0, bool ____setAlphaOnly)
+        {
+            if (!DimmerState.LightsActive || ____setAlphaOnly) return;
+            ColorDimming.ScaleRgb(ref __0, DimmerState.Multiplier);
         }
 
-        [HarmonyPostfix]
-        [HarmonyPriority(Priority.First)]
-        [HarmonyPatch(typeof(ParametricBoxController), nameof(ParametricBoxController.Refresh))]
-        private static void ParametricBoxController_Refresh_Post(
-            ParametricBoxController __instance, Color __state)
-            => __instance.color = __state;
+        private static void Postfix(bool ____setAlphaOnly, SpriteRenderer[] ____spriteRenderers)
+        {
+            if (!DimmerState.LightsActive || !____setAlphaOnly || ____spriteRenderers == null) return;
+            float multiplier = DimmerState.Multiplier;
+            foreach (SpriteRenderer spriteRenderer in ____spriteRenderers)
+            {
+                if (spriteRenderer == null) continue;
+                Color color = spriteRenderer.color;
+                color.a *= multiplier;
+                spriteRenderer.color = color;
+            }
+        }
     }
 }
